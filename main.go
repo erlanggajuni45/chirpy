@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"sync/atomic"
 )
 
@@ -70,7 +72,7 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type validResp struct {
-		Valid bool `json:"valid"`
+		CleanedBody string `json:"cleaned_body"`
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -92,8 +94,18 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	list_word := []string{}
+	filter_word := []string{"kerfuffle", "sharbert", "fornax"}
+	for _, word := range strings.Split(params.Body, " ") {
+		selected_word := word
+		if slices.Contains(filter_word, strings.ToLower(word)) {
+			selected_word = "****"
+		}
+		list_word = append(list_word, selected_word)
+	}
+
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(validResp{
-		Valid: true,
+		CleanedBody: strings.Join(list_word, " "),
 	})
 }
