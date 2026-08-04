@@ -1,9 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
@@ -30,4 +33,36 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(chirpList)
+}
+
+func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		fmt.Printf("Error when parsing to UUID: %v\n", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	chirp, err := cfg.database.GetChirp(r.Context(), id)
+	if err != nil {
+		fmt.Printf("Error when getting chirp: %v\n", err)
+		if err == sql.ErrNoRows {
+			w.WriteHeader(404)
+			w.Write([]byte("chirp not found"))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("Error when getting chirp: " + err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(Chirp{
+		ID:        chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserID:    chirp.UserID,
+	})
 }
