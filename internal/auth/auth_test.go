@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -52,5 +53,27 @@ func TestValidateJWTRejectsWrongSecret(t *testing.T) {
 
 	if _, err := ValidateJWT(token, wrongSecret); err == nil {
 		t.Fatal("ValidateJWT() error = nil, want signature verification to fail")
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	headers := http.Header{}
+	headers.Set("Authorization", "Bearer my-token")
+
+	token, err := GetBearerToken(headers)
+	if err != nil {
+		t.Fatalf("GetBearerToken() error = %v", err)
+	}
+
+	if token != "my-token" {
+		t.Fatalf("GetBearerToken() token = %q, want %q", token, "my-token")
+	}
+}
+
+func TestGetBearerTokenMissingHeader(t *testing.T) {
+	headers := http.Header{}
+
+	if _, err := GetBearerToken(headers); err == nil {
+		t.Fatal("GetBearerToken() error = nil, want missing token to be rejected")
 	}
 }
