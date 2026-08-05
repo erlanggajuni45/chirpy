@@ -4,19 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	"github.com/alexedwards/argon2id"
+	"github.com/golang-jwt/jwt/v5"
 )
-
-func HashPassword(password string) (string, error) {
-	return argon2id.CreateHash(password, argon2id.DefaultParams)
-}
-
-func CheckPasswordHash(password, hash string) (bool, error) {
-	return argon2id.ComparePasswordAndHash(password, hash)
-}
 
 func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	current_time := time.Now().UTC()
