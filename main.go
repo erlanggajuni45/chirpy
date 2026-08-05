@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	database       *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -62,10 +63,16 @@ func main() {
 
 	dbQueries := database.New(db)
 
+	jwt_secret := os.Getenv("JWT_SECRET")
+	if jwt_secret == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
+
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		database:       dbQueries,
 		platform:       platform,
+		jwtSecret:      jwt_secret,
 	}
 	mux := http.NewServeMux()
 
