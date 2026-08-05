@@ -4,14 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/erlanggajuni45/chirpy/internal/auth"
+	"github.com/google/uuid"
 )
+
+type LoginResp struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+	Token     string    `json:"token"`
+}
 
 func (cfg *apiConfig) handlerLoginUser(w http.ResponseWriter, r *http.Request) {
 	type params struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email            string `json:"email"`
+		Password         string `json:"password"`
+		ExpiresInSeconds int    `json:"expires_in_seconds"`
 	}
 
 	var req params
@@ -45,11 +56,25 @@ func (cfg *apiConfig) handlerLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.ExpiresInSeconds == 0 || req.ExpiresInSeconds > 3600 {
+		req.ExpiresInSeconds = 3600
+	}
+
+	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(req.ExpiresInSeconds))
+
+	if err != nil {
+		fmt.Println("Error when get jwt token: ", err.Error())
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(User{
+	json.NewEncoder(w).Encode(LoginResp{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
+		Token:     token,
 	})
 }
