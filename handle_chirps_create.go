@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/erlanggajuni45/chirpy/internal/auth"
 	"github.com/erlanggajuni45/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -42,6 +43,22 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		fmt.Println("Error when get token:", err.Error())
+		w.WriteHeader(401)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		fmt.Println("Error when validate token:", err.Error())
+		w.WriteHeader(401)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	cleaned_body, err := validateChirp(params.Body)
 	if err != nil {
 		w.WriteHeader(400)
@@ -51,7 +68,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 
 	new_chirp, err := cfg.database.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body:   cleaned_body,
-		UserID: params.UserId,
+		UserID: userID,
 	})
 
 	if err != nil {
