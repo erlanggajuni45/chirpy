@@ -14,7 +14,7 @@ type RefreshTokenRes struct {
 	Token string `json:"token"`
 }
 
-func (cfg *apiConfig) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 	refresh_token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		fmt.Println("Error get refresh token: ", err.Error())
