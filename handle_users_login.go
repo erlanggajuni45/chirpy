@@ -57,7 +57,7 @@ func (cfg *apiConfig) handlerLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(1)*time.Hour)
+	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Hour)
 
 	if err != nil {
 		fmt.Println("Error when get jwt token: ", err.Error())

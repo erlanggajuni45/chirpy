@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -18,8 +17,7 @@ func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request
 	refresh_token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		fmt.Println("Error get refresh token: ", err.Error())
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
+		respondWithError(w, 500, "Error get refresh token", err)
 		return
 	}
 
@@ -36,6 +34,8 @@ func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	fmt.Println("INIKAH", user_id)
+
 	token, err := auth.MakeJWT(user_id, cfg.jwtSecret, time.Duration(1)*time.Hour)
 
 	if err != nil {
@@ -45,8 +45,7 @@ func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(RefreshTokenRes{
+	respondWithJSON(w, 200, RefreshTokenRes{
 		Token: token,
 	})
 }
