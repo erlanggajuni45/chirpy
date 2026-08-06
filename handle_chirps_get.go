@@ -10,6 +10,39 @@ import (
 )
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
+	author := r.URL.Query().Get("author_id")
+	if author != "" {
+		userId, err := uuid.Parse(author)
+		if err != nil {
+			fmt.Printf("Error when parsing to UUID: %v\n", err)
+			w.WriteHeader(500)
+			return
+		}
+
+		chirps, err := cfg.database.GetChirpsByUser(r.Context(), userId)
+		if err != nil {
+			fmt.Printf("Error when getting chirps by user id: %v\n", err)
+			w.WriteHeader(500)
+			return
+		}
+
+		var chirpList = make([]Chirp, 0)
+		for _, c := range chirps {
+			chirpList = append(chirpList, Chirp{
+				ID:        c.ID,
+				CreatedAt: c.CreatedAt,
+				UpdatedAt: c.UpdatedAt,
+				Body:      c.Body,
+				UserID:    c.UserID,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(chirpList)
+		return
+	}
+
 	var chirpList = make([]Chirp, 0)
 	chirps, err := cfg.database.GetChirps(r.Context())
 
