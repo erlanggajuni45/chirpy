@@ -18,6 +18,7 @@ type apiConfig struct {
 	database       *database.Queries
 	platform       string
 	jwtSecret      string
+	apiKey         string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -68,11 +69,17 @@ func main() {
 		log.Fatal("JWT_SECRET must be set")
 	}
 
+	apikey := os.Getenv("POLKA_KEY")
+	if apikey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		database:       dbQueries,
 		platform:       platform,
 		jwtSecret:      jwt_secret,
+		apiKey:         apikey,
 	}
 	mux := http.NewServeMux()
 
@@ -89,6 +96,7 @@ func main() {
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRefreshTokenRevoke)
 	mux.HandleFunc("PUT /api/users", apiCfg.handlerUpdateUser)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerWebhook)
 
 	s := http.Server{
 		Handler: mux,
