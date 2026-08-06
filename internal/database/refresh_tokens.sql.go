@@ -18,7 +18,7 @@ VALUES(
     NOW(),
     NOW(),
     $2,
-    NOW() + INTERVAL '1 hour'
+    NOW() + INTERVAL '60 days'
 )
 `
 
